@@ -1,22 +1,18 @@
 import asyncio
+from pathlib import Path
 
-async def create_trusted_certificate(to_what_address):
+async def run_powershell(to_what_address):
+    file_directory = Path(f'{Path(__file__).resolve().parent}' + '\\Saved_Trusted_Certificate')
+    file_directory.mkdir(parents=True, exist_ok=True)
+    clean_address = ''.join(needed_symbol for needed_symbol in to_what_address if needed_symbol.isalnum())
 
-async def run_powershell():
     process = await asyncio.create_subprocess_shell(cmd = "powershell -NoLogo -NoExit",stdin = asyncio.subprocess.PIPE,stdout = asyncio.subprocess.PIPE)
-    process.stdin.write('winget list openssl\n__END__\n'.encode(encoding = 'utf-8'))
+    process.stdin.write('winget install ShiningLight.OpenSSL.Light --source winget\n'.encode(encoding='utf-8'))
     await process.stdin.drain()
-    while True:
-        answer = (await process.stdout.readline()).decode(encoding = 'utf-8').rstrip()
-        if 'OpenSSL' in answer:
-            process.stdin.write(''.encode(encoding = 'utf-8'))
-        if answer == '__END__':
-            break
-    process.stdin.write('winget install ShiningLight.OpenSSL.Light --source winget'.encode(encoding = 'utf-8'))
+    process.stdin.write(f'& "C:\\Program Files\\OpenSSL-Win64\\bin\\openssl.exe" req -x509 -newkey rsa:2048 -nodes -keyout {str(file_directory).replace('\\','\\\\') + '\\' + clean_address}.key -out {str(file_directory).replace('\\','\\\\') + '\\' + clean_address}.crt -days 365 -subj "/CN={to_what_address}"\n'.encode(encoding = 'utf-8'))
     await process.stdin.drain()
-    await process.wait()
-    process.stdin.write('exit'.encode(encoding = 'utf-8'))
+    process.stdin.write('exit\n'.encode(encoding = 'utf-8'))
     await process.stdin.drain()
     await process.wait()
 
-asyncio.run(run_powershell())
+asyncio.run(run_powershell(to_what_address = 'google.com'))
