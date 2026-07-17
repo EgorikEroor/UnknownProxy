@@ -24,7 +24,7 @@ async def create_trusted_certificate(to_what_address):
         if path_to_openssl_directory:
             openssl_process = await asyncio.create_subprocess_exec(fr"{path_to_openssl_directory}\openssl.exe",'genrsa','-out',fr"{path_to_saved_trusted_certificate_directory}\{clean_address}.key",'2048')
             await openssl_process.wait()
-            openssl_process = await asyncio.create_subprocess_exec(fr"{path_to_openssl_directory}\openssl.exe",'req','-key',fr"{path_to_saved_trusted_certificate_directory}\{clean_address}.key",'-out',fr"{path_to_saved_trusted_certificate_directory}\{clean_address}.csr",'-subj',f'/CN={clean_address}')
+            openssl_process = await asyncio.create_subprocess_exec(fr"{path_to_openssl_directory}\openssl.exe",'req','-new','-key',fr"{path_to_saved_trusted_certificate_directory}\{clean_address}.key",'-out',fr"{path_to_saved_trusted_certificate_directory}\{clean_address}.csr",'-subj',f'/CN={clean_address}','-config',fr"{path_to_saved_trusted_certificate_directory}\config_for_certification_center.txt")
             await openssl_process.wait()
             openssl_process = await asyncio.create_subprocess_exec(fr"{path_to_openssl_directory}\openssl.exe",'x509','-req','-in',fr"{path_to_saved_trusted_certificate_directory}\{clean_address}.csr",'-CA',fr"{path_to_saved_trusted_certificate_directory}\root_for_certification_center.crt",'-CAkey',fr"{path_to_saved_trusted_certificate_directory}\root_for_certification_center.key",'-CAcreateserial','-out',fr"{path_to_saved_trusted_certificate_directory}\{clean_address}.crt",'-days','365','-sha256')
             await openssl_process.wait()
